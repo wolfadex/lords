@@ -1,17 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Main</title>
-  <style>body { padding: 0; margin: 0; }</style>
-</head>
-
-<body>
-
-<pre id="elm"></pre>
-
-<script>
-try {
 (function(scope){
 'use strict';
 
@@ -1896,11 +1882,7 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 	function sendToApp(msg, viewMetadata)
 	{
 		var pair = A2(update, msg, model);
-		if (localStorage.getItem("elm-snapshot_auto-enabled") !== "false" || localStorage.getItem("elm-snapshot_snap-next")) {
-      localStorage.setItem("elm-snapshot_model", JSON.stringify(pair.a));
-      localStorage.removeItem("elm-snapshot_snap-next");
-    }
-    stepper(model = pair.a, viewMetadata);
+		stepper(model = pair.a, viewMetadata);
 		_Platform_enqueueEffects(managers, pair.b, subscriptions(model));
 	}
 
@@ -5225,29 +5207,12 @@ var $laserpants$elm_update_pipeline$Update$Pipeline$save = function (model) {
 	return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 };
 var $author$project$Main$init = function (_v0) {
-    var snapshot = localStorage.getItem("elm-snapshot_model");
-    if (snapshot != null) {
-      try {
-        return {
-          "$": "#2",
-          a: JSON.parse(snapshot),
-          b: { "$": 2, m: { "$": "[]" } }
-        };
-      } catch(err) {
-        return $laserpants$elm_update_pipeline$Update$Pipeline$save(
+	return $laserpants$elm_update_pipeline$Update$Pipeline$save(
 		{
 			game: $author$project$Main$MainMenu,
 			seed: $elm$random$Random$initialSeed(0)
 		});
-      }
-    } else {
-        return $laserpants$elm_update_pipeline$Update$Pipeline$save(
-		{
-			game: $author$project$Main$MainMenu,
-			seed: $elm$random$Random$initialSeed(0)
-		});
-    }
-}
+};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (model) {
@@ -12692,85 +12657,3 @@ var $author$project$Main$main = $elm$browser$Browser$document(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
-function addSnapshot() {
-  var snapModal = document.createElement("div");
-  var autoSnap = document.createElement("label");
-  var autoSnapLabel = document.createElement("span");
-  var autoSnapCheckbox = document.createElement("input");
-  var snapButton = document.createElement("button");
-  var clearSnap = document.createElement("button");
-
-  snapModal.style.position = "fixed";
-  snapModal.style.left = "2rem";
-  snapModal.style.bottom = "2rem";
-  snapModal.style.display = "flex";
-  snapModal.style.flexDirection = "column";
-  snapModal.style.fontFamily = "sans-serif";
-  snapModal.style.backgroundColor = "antiquewhite";
-  snapModal.style.border = "2px solid black";
-  
-  autoSnapLabel.innerText = "Auto-Snapshot:";
-  autoSnap.style.margin = "0.5rem";
-
-  autoSnapCheckbox.setAttribute("type", "checkbox");
-
-  const autoSnapEnabled = localStorage.getItem("elm-snapshot_auto-enabled") !== "false";
-
-  if (autoSnapEnabled) {
-    autoSnapCheckbox.setAttribute("checked", true);
-  }
-
-  autoSnapCheckbox.addEventListener("click", function() {
-    if (autoSnapCheckbox.checked) {
-      localStorage.setItem("elm-snapshot_auto-enabled", true);
-      snapButton.setAttribute("disabled", true);
-    } else {
-      localStorage.setItem("elm-snapshot_auto-enabled", false);
-      snapButton.removeAttribute("disabled");
-    }
-  });
-
-  autoSnap.appendChild(autoSnapLabel);
-  autoSnap.appendChild(autoSnapCheckbox);
-
-  snapButton.innerText = "Snapshot Next Update";
-  snapButton.style.margin = "0.5rem";
-  snapButton.addEventListener("click", function() {
-    localStorage.setItem("elm-snapshot_snap-next", true);
-  });
-
-  if (autoSnapEnabled) {
-    snapButton.setAttribute("disabled", true);
-  }
-
-  clearSnap.innerText = "Clear Snapshot";
-  clearSnap.style.margin = "0.5rem";
-  clearSnap.addEventListener("click", function() {
-    localStorage.removeItem("elm-snapshot_model");
-  });
-
-  snapModal.appendChild(autoSnap);
-  snapModal.appendChild(snapButton);
-  snapModal.appendChild(clearSnap);
-
-  document.body.appendChild(snapModal);
-}
-requestAnimationFrame(addSnapshot);
-
-  var app = Elm.Main.init({ node: document.getElementById("elm") });
-}
-catch (e)
-{
-  // display initialization errors (e.g. bad flags, infinite recursion)
-  var header = document.createElement("h1");
-  header.style.fontFamily = "monospace";
-  header.innerText = "Initialization Error";
-  var pre = document.getElementById("elm");
-  document.body.insertBefore(header, pre);
-  pre.innerText = e;
-  throw e;
-}
-</script>
-
-</body>
-</html>
