@@ -4,8 +4,8 @@
   "description": "A game about gaining followers and defeating your rival gods.",
   "main": "index.js",
   "scripts": {
-    "dev": "node ./start.js",
-    "dev-old": "parcel src/index.html"
+    "dev-snapshot": "node ./start.js",
+    "dev": "parcel src/index.html"
   },
   "repository": {
     "type": "git",

@@ -49,7 +49,14 @@ type alias PlayingModel =
 type alias Kingdom =
     { name : String
     , image : String
-    , followers : Int
+    , followers : List Follower
+    }
+
+
+type alias Follower =
+    { allegiance : Int
+    , name : String
+    , age : Int
     }
 
 
@@ -126,7 +133,7 @@ updateNewGame msg model newGameModel =
                             { yourKingdom =
                                 { name = newGameModel.name
                                 , image = newGameModel.image
-                                , followers = 0
+                                , followers = []
                                 }
                             , opossingKingdoms = []
                             }
@@ -239,5 +246,45 @@ viewNewGame model =
 
 
 viewPlaying : PlayingModel -> Element Msg
-viewPlaying model =
-    text "playing"
+viewPlaying { yourKingdom, opossingKingdoms } =
+    column
+        [ padding 16, spacing 8 ]
+        [ "Kingdom of "
+            ++ yourKingdom.name
+            |> text
+        , image
+            [ width (fill |> maximum 50)
+            , height (fill |> maximum 50)
+            ]
+            { description = "you"
+            , src = yourKingdom.image
+            }
+        , yourKingdom.followers
+            |> List.length
+            |> String.fromInt
+            |> (++) "Followers: "
+            |> text
+        , opossingKingdoms
+            |> List.map viewOpossingKingdom
+            |> wrappedRow []
+        ]
+
+
+viewOpossingKingdom : Kingdom -> Element Msg
+viewOpossingKingdom kingdom =
+    column
+        []
+        [ text kingdom.name
+        , image
+            [ width (fill |> maximum 50)
+            , height (fill |> maximum 50)
+            ]
+            { description = "kingdom god"
+            , src = kingdom.image
+            }
+        , kingdom.followers
+            |> List.length
+            |> String.fromInt
+            |> (++) "Followers: "
+            |> text
+        ]
