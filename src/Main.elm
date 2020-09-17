@@ -10,6 +10,7 @@ import Follower exposing (Follower, Followers)
 import God exposing (Error(..), God)
 import Gui
 import Gui.Color as Color
+import List.NonEmpty exposing (NonEmptyList)
 import Random exposing (Seed)
 import Update.Pipeline as Up
 
@@ -46,7 +47,14 @@ type alias PlayingModel =
     { yourKingdom : Kingdom
     , opposingKingdoms : List Kingdom
     , unassignedFollowers : Followers
+    , spells : NonEmptyList Spell
     }
+
+
+type Spell
+    = CastAll
+    | CastYours
+    | CastSpecific
 
 
 type alias Kingdom =
@@ -163,6 +171,7 @@ updateNewGame msg model newGameModel =
                                         }
                                     , opposingKingdoms = []
                                     , unassignedFollowers = Follower.createFollowers unassignedFollowers
+                                    , spells = List.NonEmpty.singleton CastAll
                                     }
                             , seed = nextSeed
                         }
