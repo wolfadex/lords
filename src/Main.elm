@@ -6,13 +6,16 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Follower exposing (Follower, Followers)
+import God exposing (Error(..), God)
 import Gui
 import Gui.Color as Color
+import List.NonEmpty exposing (NonEmptyList)
 import Random exposing (Seed)
 import Update.Pipeline as Up
 
 
-main : Program () Model Msg
+main : Program Int Model Msg
 main =
     Browser.document
         { init = init
@@ -36,27 +39,34 @@ type Game
 
 type alias NewGameModel =
     { name : String
-    , image : String
+    , description : String
     }
 
 
 type alias PlayingModel =
     { yourKingdom : Kingdom
-    , opossingKingdoms : List Kingdom
+    , opposingKingdoms : List Kingdom
+    , unassignedFollowers : Followers
+    , spells : NonEmptyList Spell
     }
+
+
+type Spell
+    = CastAll
+    | CastYours
+    | CastSpecific
 
 
 type alias Kingdom =
-    { name : String
-    , image : String
-    , followers : Int
+    { god : God
+    , followers : Followers
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : Int -> ( Model, Cmd Msg )
+init i =
     Up.save
-        { seed = Random.initialSeed 0
+        { seed = Random.initialSeed i
         , game = MainMenu
         }
 
@@ -73,8 +83,14 @@ subscriptions model =
 type Msg
     = CreateNewGame
     | SetName String
-    | SetImage String
+    | SetDescriptions String
     | BeginGame
+    | ToggleUnassignedFollowers
+    | SelectUnassignedFollower Follower
+    | ToggleYourKingdomFollowers
+    | SelectYourKingdomFollower Follower
+    | ToggleOpposingFollowers
+    | SelectOpposingFollower Follower
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -94,15 +110,33 @@ updateMainMenu : Msg -> Model -> ( Model, Cmd Msg )
 updateMainMenu msg model =
     case msg of
         CreateNewGame ->
-            Up.save { model | game = NewGame { name = "", image = "" } }
+            Up.save { model | game = NewGame { name = "", description = "" } }
 
         SetName _ ->
             Up.save model
 
-        SetImage _ ->
+        SetDescriptions _ ->
             Up.save model
 
         BeginGame ->
+            Up.save model
+
+        ToggleUnassignedFollowers ->
+            Up.save model
+
+        SelectUnassignedFollower _ ->
+            Up.save model
+
+        ToggleYourKingdomFollowers ->
+            Up.save model
+
+        SelectYourKingdomFollower _ ->
+            Up.save model
+
+        ToggleOpposingFollowers ->
+            Up.save model
+
+        SelectOpposingFollower _ ->
             Up.save model
 
 
@@ -115,27 +149,106 @@ updateNewGame msg model newGameModel =
         SetName name ->
             Up.save { model | game = NewGame { newGameModel | name = name } }
 
-        SetImage image ->
-            Up.save { model | game = NewGame { newGameModel | image = image } }
+        SetDescriptions description ->
+            Up.save { model | game = NewGame { newGameModel | description = description } }
 
         BeginGame ->
-            Up.save
-                { model
-                    | game =
-                        Playing
-                            { yourKingdom =
-                                { name = newGameModel.name
-                                , image = newGameModel.image
-                                , followers = 0
-                                }
-                            , opossingKingdoms = []
-                            }
-                }
+            case God.create newGameModel of
+                Ok yourGod ->
+                    let
+                        ( unassignedFollowers, nextSeed ) =
+                            Random.step
+                                (Random.list 50 Follower.new)
+                                model.seed
+                    in
+                    Up.save
+                        { model
+                            | game =
+                                Playing
+                                    { yourKingdom =
+                                        { god = yourGod
+                                        , followers = Follower.createFollowers []
+                                        }
+                                    , opposingKingdoms = []
+                                    , unassignedFollowers = Follower.createFollowers unassignedFollowers
+                                    , spells = List.NonEmpty.singleton CastAll
+                                    }
+                            , seed = nextSeed
+                        }
+
+                Err err ->
+                    Debug.todo "handle god creaetion err"
+
+        ToggleUnassignedFollowers ->
+            Up.save model
+
+        SelectUnassignedFollower _ ->
+            Up.save model
+
+        ToggleYourKingdomFollowers ->
+            Up.save model
+
+        SelectYourKingdomFollower _ ->
+            Up.save model
+
+        ToggleOpposingFollowers ->
+            Up.save model
+
+        SelectOpposingFollower _ ->
+            Up.save model
 
 
 updatePlaying : Msg -> Model -> PlayingModel -> ( Model, Cmd Msg )
 updatePlaying msg model playingModel =
-    Up.save model
+    case msg of
+        CreateNewGame ->
+            Up.save model
+
+        SetName _ ->
+            Up.save model
+
+        SetDescriptions _ ->
+            Up.save model
+
+        BeginGame ->
+            Up.save model
+
+        ToggleUnassignedFollowers ->
+            Up.save
+                { model
+                    | game =
+                        Playing
+                            { playingModel
+                                | unassignedFollowers = Follower.toggleView playingModel.unassignedFollowers
+                            }
+                }
+
+        SelectUnassignedFollower _ ->
+            Debug.todo "follower shit"
+
+        ToggleYourKingdomFollowers ->
+            Up.save
+                { model
+                    | game =
+                        Playing
+                            { playingModel
+                                | yourKingdom = kingdomToggleFollowres playingModel.yourKingdom
+                            }
+                }
+
+        SelectYourKingdomFollower _ ->
+            Debug.todo "follower shit"
+
+        ToggleOpposingFollowers ->
+            Debug.todo "follower shit"
+
+        SelectOpposingFollower _ ->
+            Debug.todo "follower shit"
+
+
+kingdomToggleFollowres : Kingdom -> Kingdom
+kingdomToggleFollowres kingdom =
+    { kingdom | followers = Follower.toggleView kingdom.followers }
 
 
 
@@ -208,20 +321,13 @@ viewNewGame model =
             }
         , Input.text
             []
-            { label = text "What do you look like?" |> Input.labelAbove []
-            , text = model.image
+            { label = text "Description?" |> Input.labelAbove []
+            , text = model.description
             , placeholder =
-                text "https://vignette.wikia.nocookie.net/lovecraft/images/c/cf/Screenshot_20171018-093500.jpg/revision/latest/scale-to-width-down/1000?cb=20171020174137"
+                text "Devourer of souls."
                     |> Input.placeholder []
                     |> Just
-            , onChange = SetImage
-            }
-        , image
-            [ width (fill |> maximum 200)
-            , height (fill |> maximum 200)
-            ]
-            { description = "Image of you"
-            , src = model.image
+            , onChange = SetDescriptions
             }
         , Gui.menuButton
             { label = "Begin Your Reign"
@@ -229,7 +335,7 @@ viewNewGame model =
                 if String.isEmpty model.name then
                     Nothing
 
-                else if String.isEmpty model.image then
+                else if String.isEmpty model.description then
                     Nothing
 
                 else
@@ -239,5 +345,44 @@ viewNewGame model =
 
 
 viewPlaying : PlayingModel -> Element Msg
-viewPlaying model =
-    text "playing"
+viewPlaying { yourKingdom, opposingKingdoms, unassignedFollowers } =
+    column
+        [ padding 16
+        , spacing 8
+        , width fill
+        ]
+        [ row
+            [ width fill, height fill ]
+            [ column
+                [ spacing 8 ]
+                [ God.view yourKingdom.god
+                , Follower.viewMany
+                    { followers = yourKingdom.followers
+                    , onToggle = ToggleYourKingdomFollowers
+                    , onSelectFollower = SelectYourKingdomFollower
+                    }
+                ]
+            , Follower.viewMany
+                { followers = unassignedFollowers
+                , onToggle = ToggleUnassignedFollowers
+                , onSelectFollower = SelectUnassignedFollower
+                }
+                |> el [ alignTop ]
+            ]
+        , opposingKingdoms
+            |> List.map viewOpposingKingdom
+            |> wrappedRow []
+        ]
+
+
+viewOpposingKingdom : Kingdom -> Element Msg
+viewOpposingKingdom { god, followers } =
+    column
+        []
+        [ God.view god
+        , Follower.viewMany
+            { followers = followers
+            , onToggle = ToggleOpposingFollowers
+            , onSelectFollower = SelectOpposingFollower
+            }
+        ]
